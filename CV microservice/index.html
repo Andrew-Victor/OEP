@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webcam Capture and Upload</title>
+</head>
+<body>
+    <h1>Webcam Capture and Upload</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+    <script>
+        // Access the webcam
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+
+        // Request access to the webcam
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("Error accessing the webcam: " + err);
+            });
+
+        // Function to capture and upload image
+        const captureAndUploadImage = () => {
+            // Draw the current frame from the video onto the canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert the canvas content to a blob and upload it
+            canvas.toBlob(blob => {
+                const formData = new FormData();
+                formData.append('file', blob, 'captured_image.jpg');
+
+                fetch('http://127.0.0.1:8000/upload-image/12344/2222', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }, 'image/jpeg');
+        };
+
+        // Capture and upload image every second
+        setInterval(captureAndUploadImage, 1000);
+    </script>
+</body>
+</html>
